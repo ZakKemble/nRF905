@@ -1,2 +1,7 @@
+2013-01-04:
+	- Instead of disabling global interrupts when using SPI, just the pin change interrupt for DR is disabled.
+	- Couldn't compile with interrupts disabled.
+	- Putting module into receive mode was done in the wrong place in the non-arduino examples.
+
 2013-01-01:
 	- Initial release
