@@ -3,6 +3,7 @@
  * Author: Zak Kemble, me@zakkemble.co.uk
  * Copyright: (C) 2013 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
+ * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
 
 /*
@@ -26,9 +27,6 @@ int main()
 	// Set address of this device
 	nRF905_setRXAddress(RXADDR);
 
-	// Put into receive mode
-	nRF905_receive();
-
 	// Interrupts on
 	sei();
 
@@ -38,6 +36,9 @@ int main()
 
 	// Set address of device to send to
 	nRF905_setTXAddress(TXADDR);
+
+	// Put into receive mode
+	nRF905_receive();
 
     while(1)
     {

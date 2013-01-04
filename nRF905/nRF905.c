@@ -3,6 +3,7 @@
  * Author: Zak Kemble, me@zakkemble.co.uk
  * Copyright: (C) 2013 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
+ * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
 
 #ifdef ARDUINO
@@ -17,8 +18,15 @@
 #include <string.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/atomic.h>
 #include <util/delay.h>
+
+#if NRF905_INTERRUPTS
+#define NRF905_INT_ON() REG_EXTERNAL_INT |= (1<<BIT_EXTERNAL_INT)
+#define NRF905_INT_OFF() REG_EXTERNAL_INT &= ~(1<<BIT_EXTERNAL_INT)
+#else
+#define NRF905_INT_ON()
+#define NRF905_INT_OFF()
+#endif
 
 static void setConfigReg1(byte, byte, byte);
 static void setConfigReg2(byte, byte, byte);
@@ -94,7 +102,7 @@ void nRF905_init()
 
 	// Set interrupts
 	REG_EXTERNAL_INT_CTL |= BIT_EXTERNAL_INT_CTL;
-	REG_EXTERNAL_INT |= (1<<BIT_EXTERNAL_INT);
+	NRF905_INT_ON();
 #endif
 
 	// Startup
@@ -138,18 +146,13 @@ void nRF905_setChannel(byte band, unsigned int channel)
 	config.reg1 = (config.reg1 & NRF905_MASK_CHANNEL) | band | ((channel & 0x100)>>8);
 
 	enableStandbyMode();
-#if NRF905_INTERRUPTS
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{
-#endif
-		spiSelect();
-		spi_transfer(NRF905_CMD_W_CONFIG | NRF905_REG_CHANNEL);
-		spi_transfer(channel);
-		spi_transfer(config.reg1);
-		spiDeselect();
-#if NRF905_INTERRUPTS
-	}
-#endif
+	NRF905_INT_OFF();
+	spiSelect();
+	spi_transfer(NRF905_CMD_W_CONFIG | NRF905_REG_CHANNEL);
+	spi_transfer(channel);
+	spi_transfer(config.reg1);
+	spiDeselect();
+	NRF905_INT_ON();
 }
 
 // Set auto retransmit
@@ -197,23 +200,18 @@ void nRF905_setClockOutFreq(byte val)
 // Payload size
 void nRF905_setPayloadSize(byte size)
 {
-#if NRF905_INTERRUPTS
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{
-#endif
-		if(size > NRF905_MAX_PAYLOAD)
-			size = NRF905_MAX_PAYLOAD;
-		config.payloadSize = size;
+	NRF905_INT_OFF();
+	if(size > NRF905_MAX_PAYLOAD)
+		size = NRF905_MAX_PAYLOAD;
+	config.payloadSize = size;
 
-		enableStandbyMode();
-		spiSelect();
-		spi_transfer(NRF905_CMD_W_CONFIG | NRF905_REG_RX_PAYLOAD_SIZE);
-		spi_transfer(size);
-		spi_transfer(size);
-		spiDeselect();
-#if NRF905_INTERRUPTS
-	}
-#endif
+	enableStandbyMode();
+	spiSelect();
+	spi_transfer(NRF905_CMD_W_CONFIG | NRF905_REG_RX_PAYLOAD_SIZE);
+	spi_transfer(size);
+	spi_transfer(size);
+	spiDeselect();
+	NRF905_INT_ON();
 }
 
 static void setConfigReg1(byte val, byte mask, byte reg)
@@ -231,10 +229,12 @@ static void setConfigReg2(byte val, byte mask, byte reg)
 static void setConfigRegister(byte cmd, byte val)
 {
 	enableStandbyMode();
+	NRF905_INT_OFF();
 	spiSelect();
 	spi_transfer(cmd);
 	spi_transfer(val);
 	spiDeselect();
+	NRF905_INT_ON();
 }
 /*
 // Set configuration
@@ -271,20 +271,15 @@ void nRF905_setRXAddress(long address)
 static void setAddress(long address, byte cmd)
 {
 	enableStandbyMode();
-#if NRF905_INTERRUPTS
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{
-#endif
-		spiSelect();
-		spi_transfer(cmd);
-		spi_transfer(address>>24);
-		spi_transfer(address>>16);
-		spi_transfer(address>>8);
-		spi_transfer(address);
-		spiDeselect();
-#if NRF905_INTERRUPTS
-	}
-#endif
+	NRF905_INT_OFF();
+	spiSelect();
+	spi_transfer(cmd);
+	spi_transfer(address>>24);
+	spi_transfer(address>>16);
+	spi_transfer(address>>8);
+	spi_transfer(address);
+	spiDeselect();
+	NRF905_INT_ON();
 }
 
 // Set the payload data
@@ -296,21 +291,16 @@ void nRF905_setData(byte* data, byte len)
 	// Put into stand by mode
 	enableStandbyMode();
 
-#if NRF905_INTERRUPTS
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{
-#endif
-		spiSelect();
-		spi_transfer(NRF905_CMD_W_TX_PAYLOAD);
-	
-		// Load data
-		for(byte i=0;i<len;i++)
-			spi_transfer(data[i]);
+	NRF905_INT_OFF();
+	spiSelect();
+	spi_transfer(NRF905_CMD_W_TX_PAYLOAD);
 
-		spiDeselect();
-#if NRF905_INTERRUPTS
-	}
-#endif
+	// Load data
+	for(byte i=0;i<len;i++)
+		spi_transfer(data[i]);
+
+	spiDeselect();
+	NRF905_INT_ON();
 }
 
 //#if NRF905_COLLISION_AVOID
@@ -403,13 +393,12 @@ bool nRF905_getData(byte* data, byte len)
 	if(!gotData)
 		return false;
 
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{
-		// Copy and clear data buffer
-		memcpy((byte*)rxBuffer, data, len);
-		memset((byte*)rxBuffer, 0, sizeof(rxBuffer));
-		gotData = false;
-	}
+	NRF905_INT_OFF();
+	// Copy and clear data buffer
+	memcpy((byte*)rxBuffer, data, len);
+	memset((byte*)rxBuffer, 0, sizeof(rxBuffer));
+	gotData = false;
+	NRF905_INT_ON();
 #else
 	// No data ready
 	if(!dataReady())
@@ -423,7 +412,8 @@ bool nRF905_getData(byte* data, byte len)
 		data[i] = spi_transfer(NRF905_CMD_NOP);
 
 	// Must make sure all of the payload has been read, otherwise DR never goes low
-	for(byte i=0;i<payloadSize - len;i++)
+	byte size = config.payloadSize;
+	for(byte i=0;i<size - len;i++)
 		spi_transfer(NRF905_CMD_NOP);
 
 	spiDeselect();
@@ -470,16 +460,11 @@ void nRF905_leaveStandBy()
 static byte readStatus()
 {
 	byte status;
-#if NRF905_INTERRUPTS
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{
-#endif
-		spiSelect();
-		status = spi_transfer(NRF905_CMD_NOP);
-		spiDeselect();
-#if NRF905_INTERRUPTS
-	}
-#endif
+	NRF905_INT_OFF();
+	spiSelect();
+	status = spi_transfer(NRF905_CMD_NOP);
+	spiDeselect();
+	NRF905_INT_ON();
 	return status;
 }
 #endif
@@ -547,8 +532,10 @@ static byte inline spi_transfer(byte data)
 
 #if NRF905_INTERRUPTS
 // Data ready pin interrupt
-ISR(INT_VECTOR)
+ISR(INT_VECTOR, ISR_NOBLOCK)
 {
+	NRF905_INT_OFF();
+
 	spiSelect();
 	spi_transfer(NRF905_CMD_R_RX_PAYLOAD);
 
@@ -560,5 +547,7 @@ ISR(INT_VECTOR)
 	spiDeselect();
 
 	gotData = true;
+
+	NRF905_INT_ON();
 }
 #endif
