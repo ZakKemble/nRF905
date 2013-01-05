@@ -1,3 +1,6 @@
+2013-01-05
+	- Minor optimisation (~14bytes smaller, probably uses fewer CPU cycles)
+
 2013-01-04:
 	- Instead of disabling global interrupts when using SPI, just the pin change interrupt for DR is disabled.
 	- Couldn't compile with interrupts disabled.

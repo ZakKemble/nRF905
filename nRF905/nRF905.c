@@ -412,8 +412,8 @@ bool nRF905_getData(byte* data, byte len)
 		data[i] = spi_transfer(NRF905_CMD_NOP);
 
 	// Must make sure all of the payload has been read, otherwise DR never goes low
-	byte size = config.payloadSize;
-	for(byte i=0;i<size - len;i++)
+	byte remaining = config.payloadSize - len;
+	for(byte i=0;i<remaining;i++)
 		spi_transfer(NRF905_CMD_NOP);
 
 	spiDeselect();
