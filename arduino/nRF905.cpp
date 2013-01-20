@@ -395,7 +395,7 @@ bool nRF905_getData(byte* data, byte len)
 
 	NRF905_INT_OFF();
 	// Copy and clear data buffer
-	memcpy((byte*)rxBuffer, data, len);
+	memcpy(data, (byte*)rxBuffer, len);
 	memset((byte*)rxBuffer, 0, sizeof(rxBuffer));
 	gotData = false;
 	NRF905_INT_ON();
