@@ -1,6 +1,6 @@
 /*
  * Project: nRF905 AVR/Arduino Library/Driver
- * Author: Zak Kemble, me@zakkemble.co.uk
+ * Author: Zak Kemble, contact@zakkemble.co.uk
  * Copyright: (C) 2013 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
  * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
@@ -11,87 +11,57 @@
  * Should be around 14-16ms with default settings
  */
 
-#define F_CPU 8000000
-
-#include "../nRF905/nRF905.h"
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <avr/interrupt.h>
-#include <util/atomic.h>
 #include <util/delay.h>
-#include <stdlib.h>
+#include <stdio.h>
+#include "nRF905/nRF905.h"
+#include "util.h"
 
-#if F_CPU > 16320000
-	#define CLOCKSEL (1<<CS02)
-	#define TICKS ((F_CPU / 256) / 1000)
-#elif F_CPU >= 64000
-	#define CLOCKSEL (1<<CS01)|(1<<CS00)
-	#define TICKS ((F_CPU / 64) / 1000)
-#else
-	#error "F_CPU too low (< 64000), add more clock selects"
-#endif
+#define RXADDR {0xFE, 0x4C, 0xA6, 0xE5} // Address of this device (4 bytes)
+#define TXADDR {0x58, 0x6F, 0x2E, 0x10} // Address of device to send to (4 bytes)
+	
+#define TIMEOUT 1000 // 1 second ping timeout
 
-#define BAUD 9600
-#include <util/setbaud.h>
-
-#define RXADDR 0xFE4CA6E5 // Address of this device (4 bytes / long data type)
-#define TXADDR 0x586F2E10 // Address of device to send to (4 bytes / long data type)
-#define TIMEOUT 100 // 1 second ping timeout
-
-static void sendStr(byte*, byte);
-static unsigned long millis();
-
-// Just some random data to send
-static byte data[NRF905_MAX_PAYLOAD] = {
-	0x0A,
-	0x68,
-	0x45,
-	0xFA
-};
-
-static volatile unsigned long milliseconds = 0;
-
-int main()
+void ping_client(void)
 {
-	// Timer 0 settings for approx. millisecond tracking
-	TCCR0A = (1<<WGM01);
-	TCCR0B = CLOCKSEL;
-	TIMSK0 = (1<<OCIE0A);
-	OCR0A = TICKS;
-
-	// UART
-	PORTD &= ~(1<<PORTD0);
-	UBRR0 = UBRR_VALUE;
-#if USE_2X
-	UCSR0A = (1<<U2X0);
-#endif
-	UCSR0B = (1<<TXEN0);
-	UCSR0C = (1<<UCSZ00)|(1<<UCSZ01);
+	util_init();
 
 	// Start up
 	nRF905_init();
 
 	// Set address of this device
-	nRF905_setRXAddress(RXADDR);
+	uint8_t addrRx[] = RXADDR;
+	nRF905_setRXAddress(addrRx);
 
 	// Interrupts on
 	sei();
 
 	// LED indicator
-	DDRC |= (1<<DDC5);
-	PORTC |= (1<<PORTC5);
-
-	// Set address of device to send to
-	nRF905_setTXAddress(TXADDR);
-
-	// Set payload data
-	nRF905_setData(data, sizeof(data));
+	DDRC |= _BV(DDC5);
+	PORTC |= _BV(PORTC5);
 
 	// Put into receive mode
 	nRF905_receive();
+	
+	uint8_t counter = 0;
 
-    while(1)
-    {
+	while(1)
+	{
+		// Make data
+		char data[NRF905_MAX_PAYLOAD] = {0};
+		sprintf_P(data, PSTR("test %hhu"), counter);
+		counter++;
+
 		unsigned long startTime = millis();
+
+		// Set address of device to send to
+		uint8_t addr[] = TXADDR;
+		nRF905_setTXAddress(addr);
+
+		// Set payload data
+		nRF905_setData(data, sizeof(data));
 
 		// Send payload (send fails if other transmissions are going on, keep trying until success)
 		while(!nRF905_send());
@@ -100,54 +70,39 @@ int main()
 		nRF905_receive();
 
 		// Make buffer for reply
-		byte buffer[NRF905_MAX_PAYLOAD];
+		uint8_t buffer[NRF905_MAX_PAYLOAD];
 		bool success;
 
 		// Wait for reply with timeout
 		unsigned long sendStartTime = millis();
-		while(!(success = nRF905_getData(buffer, sizeof(buffer))) && millis() - sendStartTime < TIMEOUT);
+		while(1)
+		{
+			success = nRF905_getData(buffer, sizeof(buffer));
+			if(success)// Got data
+				break;
+
+			// Timeout
+			if(millis() - sendStartTime > TIMEOUT)
+				break;
+		}
 
 		// If success toggle LED and send ping time over UART
 		if(success)
 		{
 			unsigned int totalTime = millis() - startTime;
-			PORTC ^= (1<<PORTC5);
-			char str[] = "    ms\r\n";
-			if(totalTime > 9999)
-				totalTime = 9999;
-			itoa(totalTime, str, 10);
-			sendStr((byte*)str, sizeof(str));
+			PORTC ^= _BV(PORTC5);
+
+			printf_P(PSTR("Ping time: %ums\n"), totalTime);
+
+			// Print out ping contents
+			printf_P(PSTR("Data from server: "));
+			for(uint8_t i=0;i<sizeof(buffer);i++)
+				uart_put_nb(buffer[i]);
+			puts_P(PSTR(""));
 		}
 		else
-		{
-			char str[] = "Timeout\r\n";
-			sendStr((byte*)str, sizeof(str));
-		}
+			puts_P(PSTR("Ping timed out"));
 
 		_delay_ms(100);					
-    }
-}
-
-static void sendStr(byte* str, byte len)
-{
-	for(byte i=0;i<len;i++)
-	{
-		UDR0 = str[i];
-		while (!(UCSR0A & (1<<UDRE0)));
 	}
-}
-
-static unsigned long millis()
-{
-	unsigned long ms;
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{
-		ms = milliseconds;
-	}
-	return ms;
-}
-
-ISR(TIMER0_COMPA_vect)
-{
-	++milliseconds;
 }

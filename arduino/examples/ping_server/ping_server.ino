@@ -1,8 +1,9 @@
 /*
  * Project: nRF905 AVR/Arduino Library/Driver
- * Author: Zak Kemble, me@zakkemble.co.uk
+ * Author: Zak Kemble, contact@zakkemble.co.uk
  * Copyright: (C) 2013 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
+ * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
 
 /*
@@ -22,8 +23,8 @@
 #include <nRF905.h>
 #include <SPI.h>
 
-#define RXADDR 0x586F2E10 // Address of this device (4 bytes / long data type)
-#define TXADDR 0xFE4CA6E5 // Address of device to send to (4 bytes / long data type)
+#define RXADDR {0x58, 0x6F, 0x2E, 0x10} // Address of this device (4 bytes)
+#define TXADDR {0xFE, 0x4C, 0xA6, 0xE5} // Address of device to send to (4 bytes)
 
 void setup()
 {
@@ -31,19 +32,20 @@ void setup()
 	nRF905_init();
 	
 	// Set address of this device
-	nRF905_setRXAddress(RXADDR);
+	byte addr[] = RXADDR;
+	nRF905_setRXAddress(addr);
 
 	// Put into receive mode
 	nRF905_receive();
 
 	Serial.begin(9600);
 
-	Serial.println("Server started");
+	Serial.println(F("Server started"));
 }
 
 void loop()
 {
-	Serial.println("Waiting for ping...");
+	Serial.println(F("Waiting for ping..."));
 
 	// Make buffer for data
 	byte buffer[NRF905_MAX_PAYLOAD];
@@ -51,11 +53,16 @@ void loop()
 	// Wait for data
 	while(!nRF905_getData(buffer, sizeof(buffer)));
 
+	Serial.println(F("Got ping"));
+
 	// Set address of device to send to
-	nRF905_setTXAddress(TXADDR);
+	byte addr[] = TXADDR;
+	nRF905_setTXAddress(addr);
 
 	// Set payload data (reply with data received)
 	nRF905_setData(buffer, sizeof(buffer));
+	
+	Serial.println(F("Sending reply..."));
 
 	// Send payload (send fails if other transmissions are going on, keep trying until success)
 	while(!nRF905_send());
@@ -63,5 +70,10 @@ void loop()
 	// Put back into receive mode
 	nRF905_receive();
 
-	Serial.println("Got ping");
+	Serial.println(F("Reply sent"));
+
+	// Print out ping contents
+	Serial.print(F("Data: "));
+	Serial.write(buffer, sizeof(buffer));
+	Serial.println();
 }

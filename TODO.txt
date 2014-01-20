@@ -1,0 +1,3 @@
+Support for using pin change interrupt instead of external interrupt
+Add higher level stuff like packets, allow sending more than 32 bytes at a time, buffers to store multiple packets etc
+Support for Arduino per-sketch configuration

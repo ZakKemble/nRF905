@@ -1,38 +1,23 @@
 /*
  * Project: nRF905 AVR/Arduino Library/Driver
- * Author: Zak Kemble, me@zakkemble.co.uk
+ * Author: Zak Kemble, contact@zakkemble.co.uk
  * Copyright: (C) 2013 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
+ * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
 
-#ifndef TYPEDEFS_H_
-#define TYPEDEFS_H_
+#ifndef NRF905_TYPES_H_
+#define NRF905_TYPES_H_
 
 #ifndef ARDUINO
 #include <stdbool.h>
-typedef unsigned char byte;
 #endif
-
-typedef struct
-{
-//	union{
-		byte reg1;
-/*		byte unused:2;
-		bool auto_retran:1;
-		bool low_pwr:1;
-		byte pa_pwr:2;
-		bool pll:1;
-		byte channel:1;
-	};*/
-//	union{
-		byte reg2;
-/*		bool crc_mode:1;
-		bool crc_en:1;
-		byte crystal:3;
-		bool clk_out_en:1;
-		byte clk_out_freq:2;
-	};*/
-	byte payloadSize;
-}s_nrf905_config;
-
-#endif /* TYPEDEFS_H_ */
+#include "nRF905_config.h"
+/*
+typedef struct {
+	uint8_t len;
+	uint8_t dstAddress[NRF905_ADDR_SIZE];
+	uint8_t buffer[64];
+} nrf905_packet_s;
+*/
+#endif /* NRF905_TYPES_H_ */

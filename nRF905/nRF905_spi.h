@@ -1,23 +1,29 @@
 /*
  * Project: nRF905 AVR/Arduino Library/Driver
- * Author: Zak Kemble, me@zakkemble.co.uk
+ * Author: Zak Kemble, contact@zakkemble.co.uk
  * Copyright: (C) 2013 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
+ * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
 
-#ifndef SPI_H_
-#define SPI_H_
+#ifndef NRF905_SPI_H_
+#define NRF905_SPI_H_
 
-#include "nRF905_types.h"
 #include <avr/io.h>
 
-void spi_init();
+void spi_init(void);
 
-byte inline spi_transfer(byte data)
+inline void spi_transfer_nr(uint8_t data)
 {
 	SPDR = data;
-	while(!(SPSR & (1<<SPIF)));
+	while(!(SPSR & _BV(SPIF)));
+}
+
+inline uint8_t spi_transfer(uint8_t data)
+{
+	SPDR = data;
+	while(!(SPSR & _BV(SPIF)));
 	return SPDR;
 }
 
-#endif /* SPI_H_ */
+#endif /* NRF905_SPI_H_ */
