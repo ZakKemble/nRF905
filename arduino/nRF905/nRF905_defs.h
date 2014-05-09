@@ -63,7 +63,7 @@
 #endif
 
 // Workout channel from frequency & band
-#define NRF905_CALC_CHANNEL(f, b)	((((f) / (1 + b)) - 422400000UL) / 100000UL)
+#define NRF905_CALC_CHANNEL(f, b)	((((f) / (1 + (b>>1))) - 422400000UL) / 100000UL)
 
 #define CONCAT(a, b) a ## b
 #define CONCAT2(a, b, c) a ## b ## c

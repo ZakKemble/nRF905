@@ -35,6 +35,11 @@ typedef enum
  */
 typedef enum
 {
+// NOTE:
+// When using NRF905_BAND_868 and NRF905_BAND_915 for calculating channel (NRF905_CALC_CHANNEL(f, b)) they should be value 0x01,
+// but when using them for setting registers their value should be 0x02.
+// They're defined as 0x02 here so when used for calculating channel they're right shifted by 1
+
 	NRF905_BAND_433 = 0x00,	/**< 433MHz band */
 	NRF905_BAND_868 = 0x02,	/**< 868MHz band */
 	NRF905_BAND_915 = 0x02	/**< 915MHz band */
