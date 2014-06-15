@@ -91,7 +91,7 @@ static inline bool interrupt_on(void)
 
 typedef struct
 {
-	uint8_t reg1;
+	uint8_t reg1; // Change to array
 	uint8_t reg2;
 	uint8_t payloadSize;
 } config_s;
@@ -135,7 +135,10 @@ void nRF905_init()
 	pinMode(TRX_EN, OUTPUT);
 	pinMode(PWR_MODE, OUTPUT);
 	pinMode(TX_EN, OUTPUT);
+
+#if NRF905_COLLISION_AVOID
 	pinMode(CD, INPUT);
+#endif
 
 #if AM_IS_USED_HW
 	pinMode(AM, INPUT);
@@ -154,7 +157,10 @@ void nRF905_init()
 	TRX_EN_DDR |= _BV(TRX_EN_BIT);
 	PWR_MODE_DDR |= _BV(PWR_MODE_BIT);
 	TX_EN_DDR |= _BV(TX_EN_BIT);
+
+#if NRF905_COLLISION_AVOID
 	CD_DDR &= ~_BV(CD_BIT);
+#endif
 
 #if AM_IS_USED_HW
 	AM_DDR &= ~_BV(AM_BIT);
@@ -346,6 +352,8 @@ static void setAddress(void* address, uint8_t cmd)
 	CHIPSELECT(STANDBY)
 	{
 		spi_transfer_nr(cmd);
+		// Address bytes are sent in reverse order, which is fine as long as both ends do the same thing.
+		// Reverse loops usually create slightly smaller code.
 		for(uint8_t i=NRF905_ADDR_SIZE;i--;)
 			spi_transfer_nr(((uint8_t*)address)[i]);
 	}

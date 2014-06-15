@@ -58,7 +58,7 @@
 #define TRX_EN		7	// Enable/standby pin
 #define PWR_MODE	8	// Power mode pin
 #define TX_EN		9	// TX / RX mode pin
-#define CD			2	// Carrier detect pin
+#define CD			2	// Carrier detect pin (for collision avoidance, if enabled)
 #define CSN			10	// SPI slave select pin
 
 // Data ready pin
@@ -85,7 +85,7 @@
 #define CFG_TX_EN_PORT		B
 #define CFG_TX_EN_BIT		1
 
-// Carrier detect pin
+// Carrier detect pin (for collision avoidance, if enabled)
 #define CFG_CD_PORT			D
 #define CFG_CD_BIT			2
 
