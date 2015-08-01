@@ -7,9 +7,14 @@
  */
 
 #include <string.h>
+#ifdef AVR
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#else
+#define _delay_ms(ms) delay(ms)
+#define _delay_us(us) delayMicroseconds(us)
+#endif
 #ifdef ARDUINO
 #include <Arduino.h>
 #include <SPI.h>
@@ -152,7 +157,7 @@ void nRF905_init()
 	digitalWrite(CSN, HIGH);
 
 	SPI.begin();
-	SPI.setClockDivider(SPI_CLOCK_DIV2);
+//	SPI.setClockDivider(SPI_CLOCK_DIV2); // CHECK THIS! Max SPI clock is 10MHz, but DIV2 will be 42MHz on the Due!
 #else
 	TRX_EN_DDR |= _BV(TRX_EN_BIT);
 	PWR_MODE_DDR |= _BV(PWR_MODE_BIT);
@@ -184,7 +189,7 @@ void nRF905_init()
 
 #if NRF905_INTERRUPTS
 	// Set interrupts
-	REG_EXTERNAL_INT_CTL |= BIT_EXTERNAL_INT_CTL;
+//	REG_EXTERNAL_INT_CTL |= BIT_EXTERNAL_INT_CTL;
 	nRF905_interrupt_on();
 #endif
 
@@ -585,7 +590,7 @@ static uint8_t readStatus()
 
 #if NRF905_INTERRUPTS
 // Data ready pin interrupt
-ISR(INT_VECTOR)
+void nRF905_processInterrupt()
 {
 	switch(radio.state)
 	{

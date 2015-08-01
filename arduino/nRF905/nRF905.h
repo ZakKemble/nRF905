@@ -340,6 +340,8 @@ inline bool nRF905_airwayBusy(void)
 #endif
 }
 
+void nRF905_processInterrupt(void);
+
 /**
 * Disable data ready interrupt.
 *
@@ -350,7 +352,8 @@ inline bool nRF905_airwayBusy(void)
 inline void nRF905_interrupt_off(void)
 {
 #if NRF905_INTERRUPTS
-	REG_EXTERNAL_INT &= ~_BV(BIT_EXTERNAL_INT);
+//	REG_EXTERNAL_INT &= ~_BV(BIT_EXTERNAL_INT);
+	attachInterrupt(1, nRF905_processInterrupt, RISING);
 #endif
 }
 
@@ -364,7 +367,8 @@ inline void nRF905_interrupt_off(void)
 inline void nRF905_interrupt_on(void)
 {
 #if NRF905_INTERRUPTS
-	REG_EXTERNAL_INT |= _BV(BIT_EXTERNAL_INT);
+//	REG_EXTERNAL_INT |= _BV(BIT_EXTERNAL_INT);
+	detachInterrupt(1);
 #endif
 }
 
