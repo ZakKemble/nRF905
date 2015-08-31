@@ -144,6 +144,11 @@ typedef enum
 #define NRF905_MAX_PAYLOAD		32
 
 /**
+* Configuration register count
+*/
+#define NRF905_REGISTER_COUNT	10
+
+/**
 * Initialise, must be called before anything else!
 *
 * @return (none)
@@ -367,5 +372,12 @@ inline void nRF905_interrupt_on(void)
 	REG_EXTERNAL_INT |= _BV(BIT_EXTERNAL_INT);
 #endif
 }
+
+/**
+* Read configuration registers into byte array of ::NRF905_REGISTER_COUNT elements, mainly for debugging.
+*
+* @return (none)
+*/
+void nRF905_getConfigRegisters(void*);
 
 #endif /* NRF905_H_ */

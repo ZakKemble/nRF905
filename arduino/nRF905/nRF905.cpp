@@ -148,8 +148,8 @@ void nRF905_init()
 	pinMode(DR, INPUT);
 #endif
 
-	pinMode(CSN, OUTPUT);
 	digitalWrite(CSN, HIGH);
+	pinMode(CSN, OUTPUT);
 
 	SPI.begin();
 	SPI.setClockDivider(SPI_CLOCK_DIV2);
@@ -169,6 +169,9 @@ void nRF905_init()
 #if !NRF905_DR_SW
 	DR_DDR &= ~_BV(DR_BIT);
 #endif
+
+	spiDeselect();
+	CSN_DDR |= _BV(CSN_BIT);
 
 	spi_init();
 #endif
@@ -572,6 +575,17 @@ void nRF905_leaveStandBy()
 	//disableStandbyMode();
 }
 */
+
+void nRF905_getConfigRegisters(void* regs)
+{
+	CHIPSELECT()
+	{
+		spi_transfer_nr(NRF905_CMD_R_CONFIG);
+		for(uint8_t i=0;i<NRF905_REGISTER_COUNT;i++)
+			((uint8_t*)regs)[i] = spi_transfer(NRF905_CMD_NOP);
+	}
+}
+
 #if NEED_SW_STATUS_SUPPORT
 // Read status register
 static uint8_t readStatus()

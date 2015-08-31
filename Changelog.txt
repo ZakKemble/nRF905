@@ -1,3 +1,7 @@
+2015-08-31:
+	- Added ability to read config registers, mainly for debugging
+	- Fixed issue with non-Arduino version where using a pin other than B2 for SPI SS wouldn't work
+
 2014-01-20:
 	- Tons of fixes, improvements, generally works much better
 

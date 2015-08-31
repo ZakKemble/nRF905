@@ -35,6 +35,7 @@ nRF905_receiveBusy	KEYWORD2
 nRF905_airwayBusy	KEYWORD2
 nRF905_interrupt_on	KEYWORD2
 nRF905_interrupt_off	KEYWORD2
+nRF905_getConfigRegisters	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
