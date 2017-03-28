@@ -9,8 +9,6 @@
 #ifndef NRF905_CONFIG_H_
 #define NRF905_CONFIG_H_
 
-#include "nRF905_defs.h"
-
 // Crystal frequency (the one the radio IC/module is using)
 // NRF905_CLK_4MHZ
 // NRF905_CLK_8MHZ

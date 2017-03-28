@@ -15,6 +15,7 @@
 #include "nRF905_types.h"
 #endif
 #include "nRF905_config.h"
+#include "nRF905_defs.h"
 
 //#define nRF905_packet nrf905_packet_s;
 
