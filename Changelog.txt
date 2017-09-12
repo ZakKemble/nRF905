@@ -1,3 +1,10 @@
+2017-09-12:
+	- Version 3
+	- Simpified the library API
+	- Now uses callbacks for when events occur (valid packet received, invalid packet received, address match, transmission complete).
+	- Now uses Arduino interrupt handling when using the library in the Arduino environment
+	- And various other things
+
 2015-08-31:
 	- Added ability to read config registers, mainly for debugging
 	- Fixed issue with non-Arduino version where using a pin other than B2 for SPI SS wouldn't work

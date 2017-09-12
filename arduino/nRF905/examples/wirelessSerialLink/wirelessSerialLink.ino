@@ -1,7 +1,7 @@
 /*
- * Project: nRF905 AVR/Arduino Library/Driver
+ * Project: nRF905 AVR/Arduino Library/Driver (Wireless serial link example)
  * Author: Zak Kemble, contact@zakkemble.co.uk
- * Copyright: (C) 2014 by Zak Kemble
+ * Copyright: (C) 2017 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
  * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
@@ -9,11 +9,17 @@
 /*
  * Wireless serial link
  *
+ * TODO
+ * Don't drop DATA/ACK packets
+ * Buffer up incoming packets
+ * Buffer up incoming UART data with a small timeout (~5ms?) before sending
+ *
  * 7 -> CE
  * 8 -> PWR
  * 9 -> TXE
- * 2 -> CD
+ * 4 -> CD
  * 3 -> DR
+ * 2 -> AM
  * 10 -> CSN
  * 12 -> SO
  * 11 -> SI
@@ -21,7 +27,6 @@
  */
 
 #include <nRF905.h>
-#include <SPI.h>
 
 #define PACKET_TYPE_DATA	0
 #define PACKET_TYPE_ACK		1
@@ -32,7 +37,23 @@ typedef struct {
 	byte type;
 	byte len;
 	byte data[MAX_PACKET_SIZE];
-} packet_s;
+} packet_t;
+
+static volatile byte newData[NRF905_MAX_PAYLOAD];
+static volatile bool gotNewData;
+
+void NRF905_CB_RXCOMPLETE(void)
+{
+	gotNewData = true;
+	nRF905_read((byte*)newData, sizeof(newData));
+	
+	// Still in RX mode
+}
+
+void NRF905_CB_TXCOMPLETE(void)
+{
+	nRF905_RX();
+}
 
 void setup()
 {
@@ -40,16 +61,15 @@ void setup()
 	nRF905_init();
 
 	// Put into receive mode
-	nRF905_receive();
+	nRF905_RX();
 
-	Serial.begin(9600);
-	
+	Serial.begin(19200);
 	Serial.println(F("Ready"));
 }
 
 void loop()
 {
-	packet_s packet;
+	packet_t packet;
 
 	// Send serial data
 	byte dataSize;
@@ -68,9 +88,6 @@ void loop()
 
 		// Send packet
 		sendPacket(&packet);
-
-		// Receive mode
-		nRF905_receive();
 
 		// Wait for ACK packet
 		byte startTime = millis();
@@ -95,11 +112,10 @@ void loop()
 			}
 			else if(packet.type == PACKET_TYPE_ACK) // Is packet type ACK?
 				break;
+			
+			// drop DATA type packets
 		}
 	}
-
-	// Put into receive mode
-	nRF905_receive();
 
 	// Wait for data
 	while(1)
@@ -113,21 +129,20 @@ void loop()
 			packet.type = PACKET_TYPE_ACK;
 			packet.len = 0;
 			sendPacket(&packet);
-
-			// Put into receive mode
-			nRF905_receive();
 		}
 		else if(Serial.available()) // We've got some serial data, need to send it
 			break;
+		
+		// drop ACK type packets
 	}
 }
 
 // Send a packet
 static void sendPacket(void* _packet)
 {
-	// Void pointer to packet_s pointer hack
-	// Arduino puts all the function defs at the top of the file before packet_s being declared :/
-	packet_s* packet = (packet_s*)_packet;
+	// Void pointer to packet_t pointer hack
+	// Arduino puts all the function defs at the top of the file before packet_t being declared :/
+	packet_t* packet = (packet_t*)_packet;
 
 	// Convert packet data to plain byte array
 	byte totalLength = packet->len + 2;
@@ -139,35 +154,35 @@ static void sendPacket(void* _packet)
 	// Set address of device to send to
 	//nRF905_setTXAddress(packet->dstAddress);
 
-	// Set payload data
-	nRF905_setData(tmpBuff, totalLength);
-
 	// Send payload (send fails if other transmissions are going on, keep trying until success)
-	while(!nRF905_send());
+	while(!nRF905_TX(NRF905_DEFAULT_TXADDR, tmpBuff, totalLength, NRF905_NEXTMODE_STANDBY));
 }
 
 // Get a packet
 static bool getPacket(void* _packet)
 {
-	// Void pointer to packet_s pointer hack
-	// Arduino puts all the function defs at the top of the file before packet_s being declared :/
-	packet_s* packet = (packet_s*)_packet;
-
-	byte buffer[NRF905_MAX_PAYLOAD];
+	// Void pointer to packet_t pointer hack
+	// Arduino puts all the function defs at the top of the file before packet_t being declared :/
+	packet_t* packet = (packet_t*)_packet;
 
 	// See if any data available
-	if(!nRF905_getData(buffer, sizeof(buffer)))
+	if(!gotNewData)
 		return false;
+	
+	NRF905_NO_INTERRUPT()
+	{
+		gotNewData = false;
 
-	// Convert byte array to packet
-	packet->type = buffer[0];
-	packet->len = buffer[1];
+		// Convert byte array to packet
+		packet->type = newData[0];
+		packet->len = newData[1];
 
-	// Sanity check
-	if(packet->len > MAX_PACKET_SIZE)
-		packet->len = MAX_PACKET_SIZE;
+		// Sanity check
+		if(packet->len > MAX_PACKET_SIZE)
+			packet->len = MAX_PACKET_SIZE;
 
-	memcpy(packet->data, &buffer[2], packet->len);
+		memcpy(packet->data, (byte*)&newData[2], packet->len);
+	}
 	
 	return true;
 }

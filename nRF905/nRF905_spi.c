@@ -1,7 +1,7 @@
 /*
  * Project: nRF905 AVR/Arduino Library/Driver
  * Author: Zak Kemble, contact@zakkemble.co.uk
- * Copyright: (C) 2013 by Zak Kemble
+ * Copyright: (C) 2017 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
  * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */

@@ -1,7 +1,7 @@
 /*
- * Project: nRF905 AVR/Arduino Library/Driver
+ * Project: nRF905 AVR/Arduino Library/Driver (Debug example)
  * Author: Zak Kemble, contact@zakkemble.co.uk
- * Copyright: (C) 2015 by Zak Kemble
+ * Copyright: (C) 2017 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
  * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
@@ -10,32 +10,54 @@
  * Read configuration registers
  */
 
+#define BAUD 115200
+
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <util/setbaud.h>
 #include <stdio.h>
-#include "nRF905/nRF905.h"
-#include "util.h"
+#include "nRF905.h"
+#include "nRF905_defs.h"
 
-#define RXADDR {0xFE, 0x4C, 0xA6, 0xE5} // Address of this device (4 bytes)
+#define RXADDR 0xFE4CA6E5 // Address of this device
+
+static int put(char c, FILE* stream)
+{
+	if(c == '\n')
+		put('\r', stream);
+	loop_until_bit_is_set(UCSR0A, UDRE0);
+	UDR0 = c;
+	return 0;
+}
+
+static FILE uart_io = FDEV_SETUP_STREAM(put, NULL, _FDEV_SETUP_WRITE);
 
 void main(void)
 {
-	util_init();
+	// UART
+	//PORTD |= _BV(PORTD0);
+	//DDRD |= _BV(DDD1);
+	UBRR0 = UBRR_VALUE;
+#if USE_2X
+	UCSR0A = _BV(U2X0);
+#endif
+	UCSR0B = _BV(TXEN0);
+
+	stdout = &uart_io;
 
 	// Start up
 	nRF905_init();
 
 	// Set address of this device
-	uint8_t addrRx[] = RXADDR;
-	nRF905_setRXAddress(addrRx);
+	nRF905_setListenAddress(RXADDR);
 
 	// Interrupts on
 	sei();
 
 	// Put into receive mode
-	nRF905_receive();
+	nRF905_RX();
 	
 	while(1)
 	{
@@ -53,7 +75,7 @@ void main(void)
 		}
 
 		puts_P(PSTR(""));
-		
+
 		// Registers were all 0xFF or 0x00,  this is probably bad
 		if(dataValid >= NRF905_REGISTER_COUNT)
 		{
@@ -93,7 +115,7 @@ void main(void)
 				data = -127;
 				break;
 		}
-		printf_P(PSTR("TX Power: %hhddBm\n"), data);
+		printf_P(PSTR("TX Power: %hhddBm\n"), (int8_t)data);
 		
 		// Freq band
 		data = regs[1] & ~NRF905_MASK_BAND;
@@ -182,6 +204,8 @@ void main(void)
 				break;
 		}
 		printf_P(PSTR("Clock out freq: %s\n"), str);
+		
+		puts_P(PSTR("---------------------"));
 
 		_delay_ms(1000);				
 	}

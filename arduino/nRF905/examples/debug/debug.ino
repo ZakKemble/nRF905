@@ -1,7 +1,7 @@
 /*
- * Project: nRF905 AVR/Arduino Library/Driver
+ * Project: nRF905 AVR/Arduino Library/Driver (Debug example)
  * Author: Zak Kemble, contact@zakkemble.co.uk
- * Copyright: (C) 2015 by Zak Kemble
+ * Copyright: (C) 2017 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
  * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
  */
@@ -12,8 +12,9 @@
  * 7 -> CE
  * 8 -> PWR
  * 9 -> TXE
- * 2 -> CD
+ * 4 -> CD
  * 3 -> DR
+ * 2 -> AM
  * 10 -> CSN
  * 12 -> SO
  * 11 -> SI
@@ -21,9 +22,9 @@
  */
 
 #include <nRF905.h>
-#include <SPI.h>
+#include <nRF905_defs.h>
 
-#define RXADDR {0xFE, 0x4C, 0xA6, 0xE5} // Address of this device (4 bytes)
+#define RXADDR 0xFE4CA6E5 // Address of this device
 
 void setup()
 {
@@ -31,14 +32,12 @@ void setup()
 	nRF905_init();
 	
 	// Set address of this device
-	byte addr[] = RXADDR;
-	nRF905_setRXAddress(addr);
+	nRF905_setListenAddress(RXADDR);
 
 	// Put into receive mode
-	nRF905_receive();
+	nRF905_RX();
 
-	Serial.begin(9600);
-
+	Serial.begin(115200);
 	Serial.println(F("Started"));
 }
 
@@ -210,6 +209,8 @@ void loop()
 	}
 	Serial.print(F("Clock out freq: "));
 	Serial.println(str);
+
+	Serial.println(F("---------------------"));
 
 	delay(1000);
 }
