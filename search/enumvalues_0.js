@@ -12,6 +12,9 @@ var searchData=
   ['nrf905_5fcrc_5fdisable',['NRF905_CRC_DISABLE',['../n_r_f905_8h.html#a4b6fe675682c99925f78dd8c53d80c5da7c48d1cbb66705a63a5385e28897dd83',1,'nRF905.h']]],
   ['nrf905_5flow_5frx_5fdisable',['NRF905_LOW_RX_DISABLE',['../n_r_f905_8h.html#a169145e99b87e8fcf4ad42a237b0764aa85af70e59f74c478985cba86267ec2d9',1,'nRF905.h']]],
   ['nrf905_5flow_5frx_5fenable',['NRF905_LOW_RX_ENABLE',['../n_r_f905_8h.html#a169145e99b87e8fcf4ad42a237b0764aa3b5d5e65a6b60277d973d2115520873e',1,'nRF905.h']]],
+  ['nrf905_5fnextmode_5frx',['NRF905_NEXTMODE_RX',['../n_r_f905_8h.html#a4ad78c71c889fc173fe170e1e2641c8ba5504a27a4ff28571c40b8cdea9d13a8e',1,'nRF905.h']]],
+  ['nrf905_5fnextmode_5fstandby',['NRF905_NEXTMODE_STANDBY',['../n_r_f905_8h.html#a4ad78c71c889fc173fe170e1e2641c8ba142e40ce95da2f0d1513f948c27b166e',1,'nRF905.h']]],
+  ['nrf905_5fnextmode_5ftx',['NRF905_NEXTMODE_TX',['../n_r_f905_8h.html#a4ad78c71c889fc173fe170e1e2641c8ba91d2a86125b0adcd76e45f4361cedab4',1,'nRF905.h']]],
   ['nrf905_5foutclk_5f1mhz',['NRF905_OUTCLK_1MHZ',['../n_r_f905_8h.html#ac47bfd0ae62b88319ad9b6f516e06460ac4d806866aeb09aa63ceab77a582aff2',1,'nRF905.h']]],
   ['nrf905_5foutclk_5f2mhz',['NRF905_OUTCLK_2MHZ',['../n_r_f905_8h.html#ac47bfd0ae62b88319ad9b6f516e06460a19f08a934f1a684cba09bd84c8436788',1,'nRF905.h']]],
   ['nrf905_5foutclk_5f4mhz',['NRF905_OUTCLK_4MHZ',['../n_r_f905_8h.html#ac47bfd0ae62b88319ad9b6f516e06460adec8316641455ebfb0ba7acbe3f0f030',1,'nRF905.h']]],
@@ -20,8 +23,5 @@ var searchData=
   ['nrf905_5fpwr_5f10',['NRF905_PWR_10',['../n_r_f905_8h.html#a45bc73f96c5d42068d330e3e83be2875a4d4b75cdd5ca0bde566a00c0d7506cdf',1,'nRF905.h']]],
   ['nrf905_5fpwr_5f6',['NRF905_PWR_6',['../n_r_f905_8h.html#a45bc73f96c5d42068d330e3e83be2875a3c151c41d03f189847bfaeaa4a531299',1,'nRF905.h']]],
   ['nrf905_5fpwr_5fn10',['NRF905_PWR_n10',['../n_r_f905_8h.html#a45bc73f96c5d42068d330e3e83be2875a215ef05a7c657cefdbbd55f032b3d62d',1,'nRF905.h']]],
-  ['nrf905_5fpwr_5fn2',['NRF905_PWR_n2',['../n_r_f905_8h.html#a45bc73f96c5d42068d330e3e83be2875ae5025c1b0f4be3a04bc5c3c857a6367c',1,'nRF905.h']]],
-  ['nrf905_5fradio_5fstate_5fidle',['NRF905_RADIO_STATE_IDLE',['../n_r_f905_8h.html#ac7c2b4144fdad0768e47e563f6c1ff2ba8c10ef01dbceae3e5cc69bdaaa84cba3',1,'nRF905.h']]],
-  ['nrf905_5fradio_5fstate_5frx',['NRF905_RADIO_STATE_RX',['../n_r_f905_8h.html#ac7c2b4144fdad0768e47e563f6c1ff2bac5106e3b11ac205023fb1a34f433ae2d',1,'nRF905.h']]],
-  ['nrf905_5fradio_5fstate_5ftx',['NRF905_RADIO_STATE_TX',['../n_r_f905_8h.html#ac7c2b4144fdad0768e47e563f6c1ff2ba0919ff31255bc5530d9dd5d21f26da6a',1,'nRF905.h']]]
+  ['nrf905_5fpwr_5fn2',['NRF905_PWR_n2',['../n_r_f905_8h.html#a45bc73f96c5d42068d330e3e83be2875ae5025c1b0f4be3a04bc5c3c857a6367c',1,'nRF905.h']]]
 ];
