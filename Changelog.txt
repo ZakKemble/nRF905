@@ -1,3 +1,9 @@
+2020-10-01:
+	- Version 3.1.0
+	- Added all callbacks example
+	- Added some MCU autodetection for setting up the SPI pins
+	- Added functions to individually set RX and TX payload sizes
+
 2017-09-12:
 	- Version 3
 	- Simpified the library API
