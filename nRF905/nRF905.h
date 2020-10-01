@@ -230,6 +230,27 @@ void nRF905_setClockOut(nRF905_outclk_t val);
 void nRF905_setPayloadSize(uint8_t size);
 
 /**
+* @brief Rx Payload size
+*
+* @param [size] Rx Payload size (1 - 32)
+* @return (none)
+*
+* @see ::NRF905_MAX_PAYLOAD
+*/
+void nRF905_setRxPayloadSize(uint8_t size);
+
+/**
+
+* @brief Tx Payload size
+*
+* @param [size] Tx Payload size (1 - 32)
+* @return (none)
+*
+* @see ::NRF905_MAX_PAYLOAD
+*/
+void nRF905_setTxPayloadSize(uint8_t size);
+
+/**
 * @brief Address size
 *
 * @param [size] Address size, see ::nRF905_addr_size_t
@@ -238,7 +259,7 @@ void nRF905_setPayloadSize(uint8_t size);
 void nRF905_setAddressSize(nRF905_addr_size_t size);
 
 /**
-* @brief See if the attach match is asserted
+* @brief See if the address match is asserted
 *
 * @return 1 if currently receiving payload or payload is ready to be read, otherwise 0
 */
@@ -272,6 +293,8 @@ void nRF905_setListenAddress(uint32_t address);
 *
 * If \p nextMode is set to ::NRF905_NEXTMODE_RX then this function will take an additional 700us to complete.\n
 * If 700us is too long then set \p nextMode to ::NRF905_NEXTMODE_STANDBY and call ::nRF905_RX() in the ::NRF905_CB_TXCOMPLETE callback instead.
+*
+* The ::NRF905_CB_TXCOMPLETE callback will only work if \p nextMode is set to ::NRF905_NEXTMODE_STANDBY or ::NRF905_NEXTMODE_TX
 *
 * If \p data is NULL and/or \p len is 0 then the payload will not be modified, whatever was previously transmitted will be sent again to the \p sendTo address.
 *

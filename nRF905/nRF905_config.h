@@ -19,9 +19,12 @@
 
 // Use pin interrupt for data ready (DR)
 // NOTE: If you have other devices connected that use the SPI bus then you will need to wrap those bits of code in NRF905_NO_INTERRUPT() blocks
+// If NRF905_INTERRUPTS is 0 then you will need to call nRF905_SERVICE() as often as possible
 #define NRF905_INTERRUPTS	1
 
 // If you want to use the NRF905_CB_ADDRMATCH and NRF905_CB_RXINVALID callbacks with interrupts then both NRF905_INTERRUPTS and NRF905_INTERRUPTS_AM need to be enabled
+// If using NRF905_INTERRUPTS_AM then the timing of when the DR and AM interrupts fire is important. Don't let an interrupt run or disable interrupts for longer than it takes to receive a packet from beginning to end (thats around 7ms with default settings)
+// If an interrupt takes longer than 7ms or interrupts are disabled for longer than 7ms then you will need to set NRF905_INTERRUPTS_AM to 0, otherwise received packets will always be marked as invalid.
 #define NRF905_INTERRUPTS_AM	1
 
 // If other libraries communicate with SPI devices while inside an interrupt then set this to 1, otherwise you can set this to 0
@@ -29,11 +32,11 @@
 // If this is 1 then global interrupts will be turned off when this library uses the SPI bus
 #define NRF905_INT_SPI_COMMS	1
 
-// Use software to get data ready state instead of reading pin for high/low state, this means you don't need to connect to DR pin
+// Use software to get data ready state instead of reading pin for high/low state, this means you don't need to connect the DR pin
 // This option can only be used if NRF905_INTERRUPTS is 0
 #define NRF905_DR_SW		0
 
-// Use software to get address match state instead of reading pin for high/low state, this means you don't need to connect to AM pin
+// Use software to get address match state instead of reading pin for high/low state, this means you don't need to connect the AM pin
 // This option can only be used if NRF905_INTERRUPTS_AM is 0
 #define NRF905_AM_SW		0
 

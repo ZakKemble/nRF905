@@ -507,6 +507,36 @@ void nRF905_setPayloadSize(uint8_t size)
 	}
 }
 
+void nRF905_setRxPayloadSize(uint8_t size)
+{
+	NRF905_ATOMIC()
+	{
+		CHIPSELECT()
+		{
+			if(size > NRF905_MAX_PAYLOAD)
+				size = NRF905_MAX_PAYLOAD;
+
+			spi_transfer_nr(NRF905_CMD_W_CONFIG | NRF905_REG_RX_PAYLOAD_SIZE);
+			spi_transfer_nr(size);
+		}
+	}
+}
+
+void nRF905_setTxPayloadSize(uint8_t size)
+{
+	NRF905_ATOMIC()
+	{
+		CHIPSELECT()
+		{
+			if(size > NRF905_MAX_PAYLOAD)
+				size = NRF905_MAX_PAYLOAD;
+
+			spi_transfer_nr(NRF905_CMD_W_CONFIG | NRF905_REG_TX_PAYLOAD_SIZE);
+			spi_transfer_nr(size);
+		}
+	}
+}
+
 void nRF905_setAddressSize(nRF905_addr_size_t size)
 {
 	CHIPSELECT()
@@ -669,6 +699,10 @@ void nRF905_getConfigRegisters(void* regs)
 
 void nRF905_SERVICE()
 {
+	// TODO BUGGY?
+	// Does first TX run RXINVALID?
+	// If TX, then TX again does TXCOMPLETE run?
+
 	static uint8_t invalidPacket;
 	static uint8_t rxComplete;
 	static uint8_t addrMatch;

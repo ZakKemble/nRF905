@@ -20,6 +20,8 @@ nRF905_setTransmitPower	KEYWORD2
 nRF905_setCRC	KEYWORD2
 nRF905_setClockOut	KEYWORD2
 nRF905_setPayloadSize	KEYWORD2
+nRF905_setRxPayloadSize	KEYWORD2
+nRF905_setTxPayloadSize	KEYWORD2
 nRF905_setAddressSize	KEYWORD2
 nRF905_receiveBusy	KEYWORD2
 nRF905_airwayBusy	KEYWORD2
