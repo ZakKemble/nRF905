@@ -110,32 +110,6 @@
 // Pin stuff
 ///////////////////
 
-// Arduino pin assignments
-#define NRF905_TRX_EN	7	// Enable/standby pin (Required)
-#define NRF905_PWR_MODE	8	// Power mode pin (Required)
-#define NRF905_TX_EN	9	// TX / RX mode pin (Required)
-#define NRF905_CD		4	// Carrier detect pin (Optional, used for collision avoidance if NRF905_COLLISION_AVOID is 1 or if you want to use the nRF905_airwayBusy() function)
-#define NRF905_CSN		10	// SPI slave select pin (Required)
-
-// Data ready pin
-// If using interrupts (NRF905_INTERRUPTS 1) then this must be an interrupt pin
-// If NRF905_INTERRUPTS is 0 and NRF905_DR_SW is 1 then this pin does not need to be connected
-#define NRF905_DR			3
-
-// Address match pin
-// If using AM interrupt (NRF905_INTERRUPTS_AM 1) then this must be an interrupt pin
-// If NRF905_INTERRUPT_AM is 0 and NRF905_AM_SW is 1 then this pin does not need to be connected
-#define NRF905_AM			2
-
-
-
-
-
-
-// --------------------------------------
-// Everything below here is for non-Arduino stuff
-// --------------------------------------
-
 // Enable/standby pin
 #define NRF905_TRX_EN_PORT		D
 #define NRF905_TRX_EN_BIT		7
@@ -170,7 +144,6 @@
 
 
 ///////////////////
-// **************************** NOT for Arduino ****************************
 // Interrupt register stuff
 // Only needed if NRF905_INTERRUPTS or NRF905_INTERRUPTS_AM are 1
 ///////////////////

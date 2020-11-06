@@ -1,22 +1,21 @@
 /*
- * Project: nRF905 AVR/Arduino Library/Driver
- * Author: Zak Kemble, contact@zakkemble.co.uk
- * Copyright: (C) 2017 by Zak Kemble
+ * Project: nRF905 AVR Library
+ * Author: Zak Kemble, contact@zakkemble.net
+ * Copyright: (C) 2020 by Zak Kemble
  * License: GNU GPL v3 (see License.txt)
- * Web: http://blog.zakkemble.co.uk/nrf905-avrarduino-librarydriver/
+ * Web: https://blog.zakkemble.net/nrf905-avrarduino-librarydriver/
  */
 
 #ifdef ARDUINO
-#include <Arduino.h>
-#include <SPI.h>
-#else
+	#error "This is not an Arduino library! Use this instead: https://github.com/zkemble/nRF905-arduino"
+#endif
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <util/atomic.h>
 #include <util/delay.h>
 #include "nRF905_spi.h"
-#endif
 
 #include <string.h>
 #include <stdint.h>
@@ -36,28 +35,6 @@
 #define POWER_DOWN()	(void)(0)
 #endif
 
-#ifdef ARDUINO
-
-#define delay_ms(ms) delay(ms)
-#define delay_us(us) delayMicroseconds(us)
-
-#if NRF905_USE_PWR
-#define POWERED_UP()			(digitalRead(NRF905_PWR_MODE) == HIGH)
-#define POWER_UP()				(digitalWrite(NRF905_PWR_MODE, HIGH))
-#define POWER_DOWN()			(digitalWrite(NRF905_PWR_MODE, LOW))
-#endif
-
-#define STANDBY_LEAVE()			(digitalWrite(NRF905_TRX_EN, HIGH))
-#define STANDBY_ENTER()			(digitalWrite(NRF905_TRX_EN, LOW))
-#define MODE_RX()				(digitalWrite(NRF905_TX_EN, LOW))
-#define MODE_TX()				(digitalWrite(NRF905_TX_EN, HIGH))
-#define spiSelect()				(digitalWrite(NRF905_CSN, LOW))
-#define spiDeselect()			(digitalWrite(NRF905_CSN, HIGH))
-#define spi_transfer(data)		(SPI.transfer(data))
-#define spi_transfer_nr(data)	(SPI.transfer(data))
-
-#else
-	
 #define	delay_ms(ms) _delay_ms(ms)
 #define delay_us(us) _delay_us(us)
 
@@ -74,8 +51,6 @@
 #define spiSelect()		(CSN_PORT &= ~_BV(CSN_BIT))
 #define spiDeselect()	(CSN_PORT |= _BV(CSN_BIT))
 
-#endif
-
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -91,56 +66,9 @@ void __attribute__((weak, alias ("__empty_callback0"))) NRF905_CB_TXCOMPLETE(voi
 //void __attribute__((weak, alias ("__empty_callback0"))) NRF905_CB_AIRWAYCLEAR(void);
 void __attribute__((weak, alias ("__empty_callback0"))) NRF905_CB_ADDRMATCH(void);
 
-#ifdef ARDUINO
-
-#define SPI_SETTINGS	SPISettings(10000000, MSBFIRST, SPI_MODE0)
-
-#if NRF905_INTERRUPTS != 0
-// It's not possible to get the current interrupt enabled state in Arduino (SREG only works for AVR based Arduinos, and no way of getting attachInterrupt() status), so we use a counter thing instead
-static volatile uint8_t isrState_local;
-
-static void nRF905_SERVICE_DR(void);
-#if NRF905_INTERRUPTS_AM
-static void nRF905_SERVICE_AM(void);
-#endif
-
-#endif
-
-#if NRF905_INTERRUPTS == 1 || NRF905_INT_SPI_COMMS == 1
-static volatile uint8_t isrState;
-static volatile uint8_t isrBusy; // Don't mess with global interrupts if we're inside an ISR
-
-static inline uint8_t interrupt_off(void)
-{
-	if(!isrBusy)
-	{
-		noInterrupts();
-		isrState++;
-	}
-	return 1;
-}
-
-static inline uint8_t interrupt_on(void)
-{
-	if(!isrBusy)
-	{
-		if(isrState > 0)
-			isrState--;
-		if(isrState == 0)
-			interrupts();
-	}
-	return 0;
-}
-#endif
-
-#endif
-
 static inline uint8_t cselect(void)
 {
 //	spi_enable();
-#ifdef ARDUINO
-//	SPI.beginTransaction(SPI_SETTINGS);
-#endif
 	spiSelect();
 	return 1;
 }
@@ -148,9 +76,6 @@ static inline uint8_t cselect(void)
 static inline uint8_t cdeselect(void)
 {
 	spiDeselect();
-#ifdef ARDUINO
-//	SPI.endTransaction();
-#endif
 //	spi_disable();
 	return 0;
 }
@@ -178,8 +103,6 @@ static inline uint8_t interrupt_on(void)
 
 #if NRF905_INTERRUPTS == 0 && NRF905_INT_SPI_COMMS == 0
 #define NRF905_ATOMIC() ((void)(0));
-#elif defined(ARDUINO)
-#define NRF905_ATOMIC() for(uint8_t _cs2 = interrupt_off(); _cs2; _cs2 = interrupt_on())
 #else
 #define NRF905_ATOMIC()	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 #endif
@@ -188,15 +111,6 @@ static inline uint8_t interrupt_on(void)
 uint8_t nRF905_irq_off()
 {
 #if NRF905_INTERRUPTS != 0
-
-#ifdef ARDUINO
-	detachInterrupt(digitalPinToInterrupt(NRF905_DR));
-	#if NRF905_INTERRUPTS_AM
-	detachInterrupt(digitalPinToInterrupt(NRF905_AM));
-	#endif
-	isrState_local++;
-	return 0;
-#else
 	uint8_t origVal = NRF905_REG_EXTERNAL_INT_DR;
 	NRF905_REG_EXTERNAL_INT_DR &= ~_BV(NRF905_BIT_EXTERNAL_INT_DR);
 	#if NRF905_INTERRUPTS_AM
@@ -204,8 +118,6 @@ uint8_t nRF905_irq_off()
 	#endif
 	origVal = !!(origVal & _BV(NRF905_BIT_EXTERNAL_INT_DR));
 	return origVal;
-#endif
-
 #else
 	return 0;
 #endif
@@ -214,19 +126,6 @@ uint8_t nRF905_irq_off()
 void nRF905_irq_on(uint8_t origVal)
 {
 #if NRF905_INTERRUPTS != 0
-
-#ifdef ARDUINO
-	((void)(origVal));
-	if(isrState_local > 0)
-		isrState_local--;
-	if(isrState_local == 0)
-	{
-		attachInterrupt(digitalPinToInterrupt(NRF905_DR), nRF905_SERVICE_DR, RISING);
-		#if NRF905_INTERRUPTS_AM
-		attachInterrupt(digitalPinToInterrupt(NRF905_AM), nRF905_SERVICE_AM, CHANGE);
-		#endif
-	}
-#else
 	if(origVal)
 	{
 		NRF905_REG_EXTERNAL_INT_DR |= _BV(NRF905_BIT_EXTERNAL_INT_DR);
@@ -234,8 +133,6 @@ void nRF905_irq_on(uint8_t origVal)
 		NRF905_REG_EXTERNAL_INT_AM |= _BV(NRF905_BIT_EXTERNAL_INT_AM);
 		#endif
 	}
-#endif
-
 #else
 	((void)(origVal));
 #endif
@@ -362,8 +259,6 @@ static uint8_t dataReady(void)
 {
 #if NRF905_DR_SW
 	return (readStatus() & (1<<NRF905_STATUS_DR));
-#elif defined(ARDUINO)
-	return digitalRead(NRF905_DR);
 #else
 	return (DR_PORT & _BV(DR_BIT));
 #endif
@@ -376,8 +271,6 @@ static uint8_t addressMatched(void)
 {
 #if NRF905_AM_SW
 	return (readStatus() & (1<<NRF905_STATUS_AM));
-#elif defined(ARDUINO)
-	return digitalRead(NRF905_AM);
 #else
 	return (AM_PORT & _BV(AM_BIT));
 #endif
@@ -385,24 +278,6 @@ static uint8_t addressMatched(void)
 
 void nRF905_init()
 {
-#ifdef ARDUINO
-	digitalWrite(NRF905_CSN, HIGH);
-	pinMode(NRF905_CSN, OUTPUT);
-
-	pinMode(NRF905_TRX_EN, OUTPUT);
-	pinMode(NRF905_TX_EN, OUTPUT);
-
-#if NRF905_USE_PWR
-	pinMode(NRF905_PWR_MODE, OUTPUT);
-#endif
-
-	SPI.begin();
-//	SPI.setClockDivider(SPI_CLOCK_DIV2);  // TODO CHECK THIS! Max SPI clock is 10MHz, but DIV2 will be 42MHz on the Due!
-//	SPI.usingInterrupt(digitalPinToInterrupt(NRF905_DR));
-//#if NRF905_INTERRUPTS_AM
-//	SPI.usingInterrupt(digitalPinToInterrupt(NRF905_AM));
-//#endif
-#else
 	spiDeselect();
 	CSN_DDR |= _BV(CSN_BIT);	
 
@@ -414,7 +289,6 @@ void nRF905_init()
 #endif
 
 	spi_init();
-#endif
 
 	POWER_DOWN();
 	STANDBY_ENTER();
@@ -424,11 +298,9 @@ void nRF905_init()
 
 #if NRF905_INTERRUPTS
 	// Set interrupts
-	#if !defined(ARDUINO)
 	NRF905_REG_EXTERNAL_INT_CTL_DR |= NRF905_BIT_EXTERNAL_INT_CTL_DR; // Trigger on rising
 	#if NRF905_INTERRUPTS_AM
 	NRF905_REG_EXTERNAL_INT_CTL_AM |= NRF905_BIT_EXTERNAL_INT_CTL_AM; // Trigger on change
-	#endif
 	#endif
 	nRF905_irq_on(1);
 #endif
@@ -553,11 +425,7 @@ uint8_t nRF905_receiveBusy()
 
 uint8_t nRF905_airwayBusy()
 {
-#ifdef ARDUINO
-	return digitalRead(NRF905_CD);
-#else
 	return (CD_PORT & _BV(CD_BIT));
-#endif
 }
 
 void nRF905_setListenAddress(uint32_t address)
@@ -752,15 +620,8 @@ void nRF905_SERVICE()
 
 static volatile uint8_t validPacket;
 
-#ifdef ARDUINO
-static void nRF905_SERVICE_DR()
-#else
 ISR(NRF905_INT_VECTOR_DR)
-#endif
 {
-#if defined(ARDUINO) && (NRF905_INTERRUPTS == 1 || NRF905_INT_SPI_COMMS == 1)
-	isrBusy = 1;
-#endif
 	// If DR && AM = RX new packet
 	// If DR && !AM = TX finished
 
@@ -771,23 +632,12 @@ ISR(NRF905_INT_VECTOR_DR)
 	}
 	else
 		NRF905_CB_TXCOMPLETE();
-
-#if defined(ARDUINO) && (NRF905_INTERRUPTS == 1 || NRF905_INT_SPI_COMMS == 1)
-	isrBusy = 0;
-#endif
 }
 
 #if NRF905_INTERRUPTS_AM
 
-#ifdef ARDUINO
-static void nRF905_SERVICE_AM()
-#else
 ISR(NRF905_INT_VECTOR_AM)
-#endif
 {
-#if defined(ARDUINO) && (NRF905_INTERRUPTS == 1 || NRF905_INT_SPI_COMMS == 1)
-	isrBusy = 1;
-#endif
 	// If AM goes HIGH then LOW without DR going HIGH then we got a bad packet
 
 	if(addressMatched())
@@ -795,10 +645,6 @@ ISR(NRF905_INT_VECTOR_AM)
 	else if(!validPacket)
 		NRF905_CB_RXINVALID();
 	validPacket = 0;
-
-#if defined(ARDUINO) && (NRF905_INTERRUPTS == 1 || NRF905_INT_SPI_COMMS == 1)
-	isrBusy = 0;
-#endif
 }
 
 #endif

@@ -9,10 +9,6 @@
 #ifndef NRF905_H_
 #define NRF905_H_
 
-#ifdef ARDUINO
-#include <Arduino.h>
-#endif
-
 #include <stdint.h>
 
 #include "nRF905_config.h"
@@ -294,7 +290,7 @@ void nRF905_setListenAddress(uint32_t address);
 * If \p nextMode is set to ::NRF905_NEXTMODE_RX then this function will take an additional 700us to complete.\n
 * If 700us is too long then set \p nextMode to ::NRF905_NEXTMODE_STANDBY and call ::nRF905_RX() in the ::NRF905_CB_TXCOMPLETE callback instead.
 *
-* The ::NRF905_CB_TXCOMPLETE callback will only work if \p nextMode is set to ::NRF905_NEXTMODE_STANDBY or ::NRF905_NEXTMODE_TX
+* The ::NRF905_CB_TXCOMPLETE callback will only work if \p nextMode is set to ::NRF905_NEXTMODE_STANDBY
 *
 * If \p data is NULL and/or \p len is 0 then the payload will not be modified, whatever was previously transmitted will be sent again to the \p sendTo address.
 *
